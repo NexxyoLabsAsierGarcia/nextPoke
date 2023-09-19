@@ -23,7 +23,7 @@ export const Navbar = () => {
         />
 
         <Link href={'/'}>
-          <h2>Pokémon</h2>
+          <h2>Pokémon!</h2>
         </Link>
 
         <Spacer style={{flex: 1}} />
