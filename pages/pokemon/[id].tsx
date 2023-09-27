@@ -100,11 +100,15 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
   const pokemons151 = [...Array(151)].map( (value, index) => `${index + 1}`);
 
+  // We'll pre-render only these paths at build time.
+  // { fallback: 'blocking' } will server-render pages
+  // { fallback: false } will show 404 page if doesn't exist
+  // on-demand if the path doesn't exist.
   return {
     paths: pokemons151.map( id =>({
       params: { id }
     })),
-    fallback: false
+    fallback: 'blocking'
   }
 }
 
@@ -115,9 +119,25 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 //- The page must be pre-rendered (for SEO) and be very fast — getStaticProps generates HTML and JSON files, both of which can be cached by a CDN for performance.
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { id } = params as { id: string };
+
+  const pokemon = await getPokemonInfo(id);
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false
+      }
+    }
+  }
+
   return {
     props: {
-      pokemon: await getPokemonInfo(id)
-    }
+      pokemon
+    },
+    // Next.js will attempt to re-generate the page:
+    // - When a request comes in
+    // - At most once every day/86400 seconds
+    revalidate: 86400
   }
 }

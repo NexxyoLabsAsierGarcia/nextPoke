@@ -103,7 +103,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     paths:  data.results.map( pkmn =>({
       params: { name: pkmn.name }
     })),
-    fallback: false
+    fallback: 'blocking'
   }
 }
 
@@ -114,9 +114,24 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 //- The page must be pre-rendered (for SEO) and be very fast — getStaticProps generates HTML and JSON files, both of which can be cached by a CDN for performance.
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { name } = params as { name: string };
+
+  const pokemon = await getPokemonInfo(name.toLowerCase());
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false
+      }
+    }
+  }
   return {
     props: {
-      pokemon: await getPokemonInfo(name)
-    }
+      pokemon
+    },
+    // Next.js will attempt to re-generate the page:
+    // - When a request comes in
+    // - At most once every day/86400 seconds
+    revalidate: 86400
   }
 }
